@@ -1,8 +1,19 @@
 {
-  "lastScanned": "2026-02-18T12:49:08.111Z",
+  "lastScanned": "2026-02-18T13:05:25.742Z",
   "url": "https://tyden.dk/",
   "totalCookies": 3,
   "cookies": {
+    "Cookiebot": [
+      {
+        "name": "CookieConsent",
+        "service": "Cookiebot",
+        "category": "Nødvendig",
+        "description": "Gemmer brugerens samtykke til cookies – registrerer hvilke kategorier der er accepteret",
+        "expires": "1 år",
+        "domain": "tyden.dk",
+        "knownCookie": true
+      }
+    ],
     "Tawk.to": [
       {
         "name": "TawkConnectionTime",
@@ -21,17 +32,6 @@
         "expires": "Session",
         "domain": "tyden.dk",
         "knownCookie": true
-      }
-    ],
-    "Ukendt": [
-      {
-        "name": "hcdn",
-        "service": "Ukendt",
-        "category": "Ukendt",
-        "description": "Cookien er ikke genkendt i databasen – undersøg eventuelt manuelt",
-        "expires": "Session",
-        "domain": "tyden.dk",
-        "knownCookie": false
       }
     ]
   }
