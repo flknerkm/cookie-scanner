@@ -1,7 +1,7 @@
 {
-  "lastScanned": "2026-02-18T12:22:35.458Z",
+  "lastScanned": "2026-02-18T12:49:08.111Z",
   "url": "https://tyden.dk/",
-  "totalCookies": 2,
+  "totalCookies": 3,
   "cookies": {
     "Tawk.to": [
       {
@@ -12,11 +12,20 @@
         "expires": "Session",
         "domain": "tyden.dk",
         "knownCookie": true
+      },
+      {
+        "name": "twk_idm_key",
+        "service": "Tawk.to",
+        "category": "Funktionel",
+        "description": "Bruges til at identificere og administrere chat-sessioner i Tawk.to",
+        "expires": "Session",
+        "domain": "tyden.dk",
+        "knownCookie": true
       }
     ],
     "Ukendt": [
       {
-        "name": "twk_idm_key",
+        "name": "hcdn",
         "service": "Ukendt",
         "category": "Ukendt",
         "description": "Cookien er ikke genkendt i databasen – undersøg eventuelt manuelt",
