@@ -32,6 +32,8 @@ const knownCookies = {
   'tawk_uuid':        { service: 'Tawk.to', category: 'Funktionel', description: 'Genkender tilbagevendende besøgende via et unikt ID – gemmer ingen personlige oplysninger', expires: 'Persistent' },
   'TawkConnectionTime': { service: 'Tawk.to', category: 'Funktionel', description: 'Håndterer live chat-widgetten hvis den er åben i flere browser-faner', expires: 'Session' },
   'tawkUUID':         { service: 'Tawk.to', category: 'Funktionel', description: 'Genkender tilbagevendende besøgende i live chat', expires: 'Persistent' },
+  'twk_idm_key':      { service: 'Tawk.to', category: 'Funktionel', description: 'Bruges til at identificere og administrere chat-sessioner i Tawk.to', expires: 'Session' },
+  'twk_':             { service: 'Tawk.to', category: 'Funktionel', description: 'Tawk.to session- og konfigurationscookie til live chat', expires: 'Session' },
 
   // WordPress
   'wordpress_':       { service: 'WordPress', category: 'Nødvendig', description: 'Gemmer godkendelsesoplysninger for WordPress-brugere', expires: 'Session' },
@@ -97,14 +99,56 @@ function formatExpiry(cookie) {
 
   await page.goto(URL, { waitUntil: 'networkidle2', timeout: 60000 });
 
+  // Vent på at cookie-banner loader
+  console.log('Venter på cookie-banner...');
+  await new Promise(r => setTimeout(r, 4000));
+
   // Prøv at klikke på "Accepter alle"-knapper i cookie-bannere
   const acceptTexts = [
-    'accepter alle', 'accepter', 'accept all', 'accept cookies','Accept',
+    'accept', 'accepter alle', 'accepter', 'accept all', 'accept cookies',
     'tillad alle', 'tillad', 'godkend alle', 'godkend',
     'jeg accepterer', 'ok', 'forstået', 'enig', 'allow all',
     'allow cookies', 'got it', 'agree'
   ];
 
+  // Forsøg 1: Klik på Cookiebot-ikonet i hjørnet og accepter derfra
+  try {
+    const cookiebotSelectors = [
+      '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+      '#CybotCookiebotDialogBodyButtonAccept',
+      '.CybotCookiebotDialogBodyButton',
+      '#CookiebotWidget',
+      'a#CookiebotWidget',
+      '[id*="cookiebot"]',
+      '[class*="cookiebot"]',
+      '[id*="Cookiebot"]',
+    ];
+    let clicked = false;
+    for (const sel of cookiebotSelectors) {
+      const el = await page.$(sel);
+      if (el) {
+        console.log(`Klikker på Cookiebot-element: ${sel}`);
+        await el.click();
+        await new Promise(r => setTimeout(r, 2000));
+        clicked = true;
+        break;
+      }
+    }
+
+    // Hvis Cookiebot-ikonet åbnede en dialog, klik "Tillad alle" i den
+    if (clicked) {
+      const allowAll = await page.$('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll');
+      if (allowAll) {
+        await allowAll.click();
+        console.log('Klikker på "Tillad alle" i Cookiebot-dialog');
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+  } catch (e) {
+    console.log('Cookiebot ikke fundet:', e.message);
+  }
+
+  // Forsøg 2: Generisk tekst-baseret klik på andre cookie-bannere
   try {
     const buttons = await page.$$('button, a, [role="button"], input[type="button"], input[type="submit"]');
     for (const button of buttons) {
@@ -117,7 +161,7 @@ function formatExpiry(cookie) {
       }
     }
   } catch (e) {
-    console.log('Ingen cookie-banner fundet:', e.message);
+    console.log('Ingen generisk cookie-banner fundet:', e.message);
   }
 
   // Vent på forsinkede scripts
