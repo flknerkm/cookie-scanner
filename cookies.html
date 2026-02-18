@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookiepolitik</title>
+</head>
+<body>
+
+  <h1>Cookies</h1>
+
+  <p>Vi bruger cookies på denne hjemmeside for at forbedre din oplevelse og analysere, hvordan siden bruges. Nedenfor kan du læse om, hvilke cookies vi anvender og hvad de bruges til. Listen opdateres automatisk én gang om måneden.</p>
+
+  <h2>Hvad er cookies?</h2>
+  <p>Cookies er små tekstfiler, som gemmes på din enhed, når du besøger en hjemmeside. De hjælper os med at huske dine præferencer og forstå, hvordan besøgende bruger vores side.</p>
+
+  <hr>
+
+  <div id="cookie-list">
+    <p>Indlæser cookie-liste...</p>
+  </div>
+
+  <hr>
+
+  <h2>Dit samtykke</h2>
+  <p>Når du besøger vores hjemmeside for første gang, vil du blive bedt om at acceptere vores brug af cookies. Du kan til enhver tid trække dit samtykke tilbage eller ændre dine cookieindstillinger ved at klikke på "Cookieindstillinger" nederst på siden.</p>
+  <p>Bemærk at afvisning af visse cookies kan påvirke funktionaliteten på hjemmesiden.</p>
+
+  <h2>Tredjeparter og dine rettigheder</h2>
+  <p>Data indsamlet via ovenstående tjenester kan blive overført til og opbevaret i lande uden for EU/EØS. Du har ret til at få indsigt i, rette eller slette de personoplysninger, vi har om dig. Kontakt os på <a href="mailto:[din e-mail]">[din e-mail]</a> for at gøre brug af dine rettigheder.</p>
+
+  <p>Læs mere om, hvordan de enkelte tjenester håndterer dine data:</p>
+  <ul>
+    <li><a href="https://policies.google.com/privacy" target="_blank">Google Privatlivspolitik</a></li>
+    <li><a href="https://www.tawk.to/privacy-policy/" target="_blank">Tawk.to Privatlivspolitik</a></li>
+  </ul>
+
+  <script>
+    // URL til din cookies.json fil på GitHub
+    // UDSKIFT denne med din egen URL efter du har oprettet repositoriet
+    const JSON_URL = 'https://raw.githubusercontent.com/DIT-BRUGERNAVN/DIT-REPOSITORY/main/cookies.json';
+
+    async function loadCookies() {
+      const container = document.getElementById('cookie-list');
+
+      try {
+        const response = await fetch(JSON_URL);
+        if (!response.ok) throw new Error('Kunne ikke hente cookie-liste');
+        const data = await response.json();
+
+        const lastScanned = new Date(data.lastScanned).toLocaleDateString('da-DK', {
+          day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        let html = `<p><em>Listen blev sidst opdateret: ${lastScanned}</em></p>`;
+
+        for (const [service, cookies] of Object.entries(data.cookies)) {
+          html += `<h2>${service}</h2>`;
+          html += `
+            <table border="1" cellpadding="8" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>Navn</th>
+                  <th>Formål</th>
+                  <th>Udløber</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          for (const cookie of cookies) {
+            html += `
+              <tr>
+                <td><code>${cookie.name}</code></td>
+                <td>${cookie.description}</td>
+                <td>${cookie.expires}</td>
+              </tr>
+            `;
+          }
+
+          html += `</tbody></table>`;
+        }
+
+        container.innerHTML = html;
+
+      } catch (err) {
+        container.innerHTML = '<p>Cookie-listen kunne ikke indlæses. Prøv igen senere.</p>';
+        console.error(err);
+      }
+    }
+
+    loadCookies();
+  </script>
+
+</body>
+</html>
