@@ -99,7 +99,7 @@ function formatExpiry(cookie) {
 
   // Prøv at klikke på "Accepter alle"-knapper i cookie-bannere
   const acceptTexts = [
-    'accepter alle', 'accepter', 'accept all', 'accept cookies',
+    'accepter alle', 'accepter', 'accept all', 'accept cookies','Accept',
     'tillad alle', 'tillad', 'godkend alle', 'godkend',
     'jeg accepterer', 'ok', 'forstået', 'enig', 'allow all',
     'allow cookies', 'got it', 'agree'
