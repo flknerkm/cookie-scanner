@@ -1,0 +1,33 @@
+name: Monthly Cookie Scanner
+
+on:
+  schedule:
+    - cron: '0 8 1 * *'  # Kører den 1. i hver måned kl. 08:00
+  workflow_dispatch:       # Giver mulighed for at køre manuelt
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Hent kode
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer afhængigheder
+        run: npm install
+
+      - name: Kør cookie-scanner
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: node scanner.js
+
+      - name: Gem cookies.json
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automatisk cookie-scanning - ${{ github.run_id }}"
+          file_pattern: cookies.json
