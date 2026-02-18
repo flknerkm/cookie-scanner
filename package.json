@@ -7,6 +7,7 @@
     "scan": "node scanner.js"
   },
   "dependencies": {
-    "puppeteer": "^21.0.0"
+    "puppeteer": "^21.0.0",
+    "@duckduckgo/autoconsent": "^9.0.0"
   }
 }
