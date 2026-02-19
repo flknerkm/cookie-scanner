@@ -162,6 +162,25 @@ async function tryAcceptBanner(page) {
   console.log('Venter på cookie-banner...');
   await new Promise(r => setTimeout(r, 5000));
 
+  // Debug: log alle knapper scanneren kan se
+  const allButtons = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('button, [role="button"]')).map(el => ({
+      tag: el.tagName,
+      id: el.id,
+      className: el.className,
+      text: el.innerText?.trim().substring(0, 80),
+      ariaLabel: el.getAttribute('aria-label'),
+      visible: el.offsetParent !== null,
+    }));
+  });
+  console.log('--- Knapper fundet på siden ---');
+  allButtons.forEach(b => console.log(JSON.stringify(b)));
+  console.log('--- Slut på knapliste ---');
+
+  // Tjek specifikt om .preferences-accept-all findes
+  const silktideBtn = await page.;
+  console.log('Silktide .preferences-accept-all fundet:', silktideBtn !== null);
+
   // Forsøg at acceptere banneret
   const accepted = await tryAcceptBanner(page);
   if (accepted) {
