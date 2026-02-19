@@ -107,6 +107,7 @@ function formatExpiry(cookie) {
 
   // Forsøg at klikke på kendte selektorer
   const selectors = [
+    '.accept-all',
     '.preferences-accept-all',
     'button[aria-label="Accept all cookies"]',
     '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
