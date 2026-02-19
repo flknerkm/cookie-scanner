@@ -1,8 +1,39 @@
 {
-  "lastScanned": "2026-02-19T10:58:06.251Z",
+  "lastScanned": "2026-02-19T11:06:50.477Z",
   "url": "https://tyden.dk/",
-  "totalCookies": 2,
+  "totalCookies": 5,
   "cookies": {
+    "Google Ads": [
+      {
+        "name": "_gcl_au",
+        "service": "Google Ads",
+        "category": "Marketing",
+        "description": "Sporer konverteringer og forbinder annonceklik med handlinger på sitet",
+        "expires": "90 dage",
+        "domain": ".tyden.dk",
+        "knownCookie": true
+      }
+    ],
+    "Google Analytics": [
+      {
+        "name": "_ga_9650L6BGDF",
+        "service": "Google Analytics",
+        "category": "Statistik",
+        "description": "Gemmer og opdaterer sessionsdata for den specifikke GA4-ejendom",
+        "expires": "2 år",
+        "domain": ".tyden.dk",
+        "knownCookie": true
+      },
+      {
+        "name": "_ga",
+        "service": "Google Analytics",
+        "category": "Statistik",
+        "description": "Identificerer unikke brugere på tværs af sessioner via et tilfældigt genereret klient-ID",
+        "expires": "2 år",
+        "domain": ".tyden.dk",
+        "knownCookie": true
+      }
+    ],
     "Tawk.to": [
       {
         "name": "TawkConnectionTime",
