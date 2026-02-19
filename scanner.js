@@ -3,57 +3,39 @@ const fs = require('fs');
 
 const SITE_URL = process.env.SITE_URL || 'https://din-hjemmeside.dk';
 
-// Stor database af kendte cookies
 const knownCookies = {
   '_ga':                { service: 'Google Analytics', category: 'Statistik', description: 'Identificerer unikke brugere på tværs af sessioner via et tilfældigt genereret klient-ID', expires: '2 år' },
   '_ga_':               { service: 'Google Analytics', category: 'Statistik', description: 'Gemmer og opdaterer sessionsdata for den specifikke GA4-ejendom', expires: '2 år' },
   '_gid':               { service: 'Google Analytics', category: 'Statistik', description: 'Identificerer brugeren inden for en enkelt session', expires: '24 timer' },
   '_gat':               { service: 'Google Analytics', category: 'Statistik', description: 'Begrænser antallet af forespørgsler til Google', expires: '1 minut' },
   '_gat_':              { service: 'Google Analytics', category: 'Statistik', description: 'Begrænser antallet af forespørgsler til Google', expires: '1 minut' },
-  '__utma':             { service: 'Google Analytics', category: 'Statistik', description: 'Skelner mellem brugere og sessioner (Universal Analytics)', expires: '2 år' },
-  '__utmb':             { service: 'Google Analytics', category: 'Statistik', description: 'Bestemmer nye sessioner og besøg', expires: '30 minutter' },
-  '__utmc':             { service: 'Google Analytics', category: 'Statistik', description: 'Skelner nye sessioner fra tilbagevendende', expires: 'Session' },
-  '__utmz':             { service: 'Google Analytics', category: 'Statistik', description: 'Gemmer trafikkilden der forklarer hvordan brugeren nåede sitet', expires: '6 måneder' },
-  '_gcl_au':            { service: 'Google Ads', category: 'Marketing', description: 'Sporer konverteringer fra annoncer og forbinder annonceklik med handlinger på sitet', expires: '90 dage' },
+  '_gcl_au':            { service: 'Google Ads', category: 'Marketing', description: 'Sporer konverteringer og forbinder annonceklik med handlinger på sitet', expires: '90 dage' },
   '_gcl_aw':            { service: 'Google Ads', category: 'Marketing', description: 'Gemmer Google Ads-klik-information (GCLID) til konverteringsattribuering', expires: '90 dage' },
   '_gcl_dc':            { service: 'Google Ads', category: 'Marketing', description: 'Gemmer klikinformation fra Display & Video 360-kampagner', expires: '90 dage' },
-  '_gcl_gb':            { service: 'Google Ads', category: 'Marketing', description: 'Bruges til Google Ads konverteringssporing via Google Signals', expires: '90 dage' },
-  '_gac_':              { service: 'Google Ads', category: 'Marketing', description: 'Forbinder Google Ads-klik med Google Analytics til kampagnesporing', expires: '90 dage' },
+  '_gac_':              { service: 'Google Ads', category: 'Marketing', description: 'Forbinder Google Ads-klik med Google Analytics', expires: '90 dage' },
   'GCL_AW_P':           { service: 'Google Ads', category: 'Marketing', description: 'Hjælper med at måle effektiviteten af Google Ads-kampagner', expires: '90 dage' },
   'ADS_VISITOR_ID':     { service: 'Google Ads', category: 'Marketing', description: 'Unik identifikator til annoncemålretning på tværs af Google-tjenester', expires: '90 dage' },
   'IDE':                { service: 'Google Ads (DoubleClick)', category: 'Marketing', description: 'Bruges af Google til at vise annoncer baseret på tidligere besøg', expires: '1 år' },
-  '__gads':             { service: 'Google Ads', category: 'Marketing', description: 'Registrerer brugerinteraktion med Google-annoncer', expires: '2 år' },
-  '__gpi':              { service: 'Google Ads', category: 'Marketing', description: 'Bruges til at spore brugeradfærd til annoncemålretning', expires: '1 år' },
   'CONSENT':            { service: 'Google', category: 'Nødvendig', description: 'Gemmer brugerens samtykkevalg til Google-tjenester', expires: '2 år' },
   'NID':                { service: 'Google', category: 'Funktionel', description: 'Gemmer brugerens præferencer til Googles tjenester', expires: '6 måneder' },
-  'HSID':               { service: 'Google', category: 'Nødvendig', description: 'Sikkerhedscookie der beskytter brugerdata', expires: '2 år' },
-  'APISID':             { service: 'Google', category: 'Nødvendig', description: 'Bruges af Google til at gemme brugerpræferencer og autentificering', expires: '2 år' },
   'AEC':                { service: 'Google', category: 'Nødvendig', description: 'Sikkerhedscookie der forhindrer misbrug', expires: '6 måneder' },
   'DV':                 { service: 'Google', category: 'Statistik', description: 'Bruges til at levere aggregerede søgestatistikker', expires: 'Session' },
   '__Secure-1PAPISID':  { service: 'Google', category: 'Nødvendig', description: 'Sikker version til at bygge en profil af brugerinteresser', expires: '2 år' },
   '__Secure-1PSID':     { service: 'Google', category: 'Nødvendig', description: 'Sikker session-cookie til Google-kontoautentificering', expires: '2 år' },
   '__Secure-1PSIDCC':   { service: 'Google', category: 'Nødvendig', description: 'Sikkerhedscookie der beskytter mod CSRF-angreb', expires: '1 år' },
-  '__Secure-1PSIDTS':   { service: 'Google', category: 'Nødvendig', description: 'Tidsstempel-cookie til sikker Google-session', expires: '1 år' },
-  '__Secure-3PAPISID':  { service: 'Google', category: 'Marketing', description: 'Bruges til at bygge en profil af brugerens interesser til annoncemålretning', expires: '2 år' },
+  '__Secure-3PAPISID':  { service: 'Google', category: 'Marketing', description: 'Bruges til annoncemålretning på tværs af Google-tjenester', expires: '2 år' },
   '__Secure-3PSID':     { service: 'Google', category: 'Marketing', description: 'Tredjepartscookie til Google-autentificering og annoncer', expires: '2 år' },
-  '__Secure-3PSIDCC':   { service: 'Google', category: 'Marketing', description: 'Sikkerhedscookie til tredjeparts Google-sessioner', expires: '1 år' },
-  '__Secure-3PSIDTS':   { service: 'Google', category: 'Marketing', description: 'Tidsstempel til tredjeparts Google-sessioner', expires: '1 år' },
-  '__Secure-BUCKET':    { service: 'Google', category: 'Statistik', description: 'Bruges til A/B-test og eksperimenter', expires: '6 måneder' },
   '__Secure-ENID':      { service: 'Google', category: 'Funktionel', description: 'Gemmer brugerindstillinger og præferencer', expires: '13 måneder' },
   'tawk_uuid':          { service: 'Tawk.to', category: 'Funktionel', description: 'Genkender tilbagevendende besøgende via et unikt ID', expires: 'Persistent' },
   'TawkConnectionTime': { service: 'Tawk.to', category: 'Funktionel', description: 'Håndterer live chat-widgetten hvis den er åben i flere browser-faner', expires: 'Session' },
   'twk_idm_key':        { service: 'Tawk.to', category: 'Funktionel', description: 'Bruges til at identificere og administrere chat-sessioner i Tawk.to', expires: 'Session' },
   'twk_':               { service: 'Tawk.to', category: 'Funktionel', description: 'Tawk.to session- og konfigurationscookie', expires: 'Session' },
-  '_hp2_id':            { service: 'Heap Analytics', category: 'Statistik', description: 'Bruges af Heap Analytics til at identificere brugere og spore adfærd', expires: '13 måneder' },
   '_fbp':               { service: 'Meta (Facebook)', category: 'Marketing', description: 'Bruges af Facebook til at levere annoncer og spore besøg på tværs af websites', expires: '90 dage' },
   '_fbc':               { service: 'Meta (Facebook)', category: 'Marketing', description: 'Gemmer klikinformation fra Facebook-annoncer', expires: '90 dage' },
-  'fr':                 { service: 'Meta (Facebook)', category: 'Marketing', description: 'Bruges af Facebook til at levere og måle relevansen af annoncer', expires: '90 dage' },
   'CookieConsent':      { service: 'Cookiebot', category: 'Nødvendig', description: 'Gemmer brugerens samtykke til cookies', expires: '1 år' },
   'hcdn':               { service: 'Hosting/CDN', category: 'Nødvendig', description: 'Teknisk cookie brugt af hostingudbyder til routing og load balancing', expires: 'Session' },
   '__cf_bm':            { service: 'Cloudflare', category: 'Nødvendig', description: 'Bruges af Cloudflare til at beskytte mod bots', expires: '30 minutter' },
   'wordpress_':         { service: 'WordPress', category: 'Nødvendig', description: 'Gemmer godkendelsesoplysninger for WordPress-brugere', expires: 'Session' },
-  'wordpress_logged_in_': { service: 'WordPress', category: 'Nødvendig', description: 'Angiver om brugeren er logget ind i WordPress', expires: 'Session' },
-  'wp-settings-':       { service: 'WordPress', category: 'Nødvendig', description: 'Gemmer brugerindstillinger for WordPress-admin', expires: '1 år' },
   'PHPSESSID':          { service: 'PHP', category: 'Nødvendig', description: 'Gemmer en unik session-ID på serveren', expires: 'Session' },
   '_lscache_vary':      { service: 'LiteSpeed Cache', category: 'Nødvendig', description: 'Bruges af LiteSpeed Cache til at håndtere caching', expires: 'Session' },
 };
@@ -81,80 +63,16 @@ function formatExpiry(cookie) {
   return 'Session';
 }
 
-async function tryAcceptBanner(page) {
-  // Metode 1: Cookiebot via iframe
-  try {
-    const frames = page.frames();
-    for (const frame of frames) {
-      const url = frame.url();
-      if (url.includes('cookiebot') || url.includes('consent')) {
-        console.log('Fandt Cookiebot-iframe:', url);
-        const btn = await frame.$('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll, #CybotCookiebotDialogBodyButtonAccept, button[id*="accept"]');
-        if (btn) {
-          await btn.click();
-          console.log('Klikket i Cookiebot-iframe');
-          return true;
-        }
-      }
-    }
-  } catch (e) {}
-
-  // Metode 2: Kendte cookie-banner selektorer
-  try {
-    const knownSelectors = [
-      // Silktide (tyden.dk)
-      '.preferences-accept-all',
-      'button[aria-label="Accept all cookies"]',
-      // Cookiebot
-      '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
-      '#CybotCookiebotDialogBodyButtonAccept',
-      'button[onclick*="CookieConsent"]',
-      // Andre kendte bannere
-      '#onetrust-accept-btn-handler',
-      '.cc-accept-all',
-      '[data-cookiefirst-action="accept"]',
-    ];
-    for (const sel of knownSelectors) {
-      const el = await page.$(sel);
-      if (el) {
-        await el.click();
-        console.log(`Klikket på: ${sel}`);
-        return true;
-      }
-    }
-  } catch (e) {}
-
-  // Metode 3: Generisk tekst-baseret søgning
-  try {
-    const acceptTexts = ['accept', 'accepter', 'tillad alle', 'allow all', 'godkend', 'agree', 'got it', 'ok'];
-    const buttons = await page.$$('button, [role="button"]');
-    for (const btn of buttons) {
-      const text = await page.evaluate(el => el.innerText?.toLowerCase().trim(), btn);
-      if (text && acceptTexts.some(t => text === t || text.startsWith(t))) {
-        await btn.click();
-        console.log(`Klikket på knap med tekst: "${text}"`);
-        return true;
-      }
-    }
-  } catch (e) {}
-
-  return false;
-}
-
 (async () => {
-  console.log(`Scanning: ${SITE_URL}`);
+  console.log('Scanning: ' + SITE_URL);
 
   const browser = await puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-features=IsolateOrigins,site-per-process']
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-
-  // Aktiver tredjepartscookies
-  const client = await page.createCDPSession();
-  await client.send('Network.enable');
 
   await page.goto(SITE_URL, { waitUntil: 'networkidle2', timeout: 60000 });
 
@@ -164,56 +82,107 @@ async function tryAcceptBanner(page) {
 
   // Debug: log alle knapper scanneren kan se
   const allButtons = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('button, [role="button"]')).map(el => ({
-      tag: el.tagName,
-      id: el.id,
-      className: el.className,
-      text: el.innerText?.trim().substring(0, 80),
-      ariaLabel: el.getAttribute('aria-label'),
-      visible: el.offsetParent !== null,
-    }));
+    return Array.from(document.querySelectorAll('button, [role="button"]')).map(function(el) {
+      return {
+        id: el.id,
+        className: el.className,
+        text: (el.innerText || '').trim().substring(0, 80),
+        ariaLabel: el.getAttribute('aria-label'),
+        visible: el.offsetParent !== null
+      };
+    });
   });
-  console.log('--- Knapper fundet på siden ---');
-  allButtons.forEach(b => console.log(JSON.stringify(b)));
-  console.log('--- Slut på knapliste ---');
 
-  // Tjek specifikt om .preferences-accept-all findes
-  const silktideBtn = await page.;
-  console.log('Silktide .preferences-accept-all fundet:', silktideBtn !== null);
+  console.log('--- Knapper fundet ---');
+  allButtons.forEach(function(b) {
+    console.log(JSON.stringify(b));
+  });
+  console.log('--- Slut ---');
 
-  // Forsøg at acceptere banneret
-  const accepted = await tryAcceptBanner(page);
+  // Tjek om Silktide accept-knappen findes
+  const silktideExists = await page.evaluate(function() {
+    return document.querySelector('.preferences-accept-all') !== null;
+  });
+  console.log('Silktide .preferences-accept-all fundet: ' + silktideExists);
+
+  // Forsøg at klikke på kendte selektorer
+  const selectors = [
+    '.preferences-accept-all',
+    'button[aria-label="Accept all cookies"]',
+    '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+    '#CybotCookiebotDialogBodyButtonAccept',
+    '#onetrust-accept-btn-handler',
+  ];
+
+  let accepted = false;
+  for (const sel of selectors) {
+    try {
+      const el = await page.$(sel);
+      if (el) {
+        console.log('Klikker på: ' + sel);
+        await el.click();
+        accepted = true;
+        await new Promise(r => setTimeout(r, 3000));
+        break;
+      }
+    } catch (e) {
+      console.log('Fejl ved klik på ' + sel + ': ' + e.message);
+    }
+  }
+
+  // Generisk tekst-fallback
+  if (!accepted) {
+    console.log('Ingen kendte selektorer fundet - prøver tekst-søgning...');
+    try {
+      const acceptTexts = ['accept', 'accepter alle', 'tillad alle', 'allow all', 'godkend alle'];
+      const buttons = await page.$$('button');
+      for (const btn of buttons) {
+        const text = await page.evaluate(function(el) {
+          return (el.innerText || '').toLowerCase().trim();
+        }, btn);
+        if (text && acceptTexts.some(function(t) { return text === t; })) {
+          console.log('Klikker på knap med tekst: ' + text);
+          await btn.click();
+          accepted = true;
+          await new Promise(r => setTimeout(r, 3000));
+          break;
+        }
+      }
+    } catch (e) {
+      console.log('Tekst-søgning fejlede: ' + e.message);
+    }
+  }
+
   if (accepted) {
-    console.log('Banner accepteret – venter på at cookies sættes...');
-    await new Promise(r => setTimeout(r, 8000));
+    console.log('Banner accepteret - venter på cookies...');
+    await new Promise(r => setTimeout(r, 10000));
   } else {
-    console.log('Intet banner fundet – fortsætter...');
+    console.log('Intet banner fundet');
     await new Promise(r => setTimeout(r, 5000));
   }
 
-  // Scroll for at trigge lazy scripts
-  await page.evaluate(() => window.scrollBy(0, 600));
-  await new Promise(r => setTimeout(r, 4000));
+  await page.evaluate(function() { window.scrollBy(0, 600); });
+  await new Promise(r => setTimeout(r, 3000));
 
   const cookies = await page.cookies();
   await browser.close();
 
-  console.log(`Fandt ${cookies.length} cookies`);
+  console.log('Fandt ' + cookies.length + ' cookies');
 
-  const results = cookies.map(cookie => {
+  const results = cookies.map(function(cookie) {
     const known = matchCookie(cookie.name);
     return {
       name: cookie.name,
-      service: known?.service || 'Ukendt',
-      category: known?.category || 'Ukendt',
-      description: known?.description || 'Cookien er ikke genkendt i databasen – undersøg eventuelt manuelt',
-      expires: known?.expires || formatExpiry(cookie),
+      service: known ? known.service : 'Ukendt',
+      category: known ? known.category : 'Ukendt',
+      description: known ? known.description : 'Cookien er ikke genkendt i databasen',
+      expires: known ? known.expires : formatExpiry(cookie),
       domain: cookie.domain,
-      knownCookie: known?.matched || false,
+      knownCookie: known ? true : false,
     };
   });
 
-  results.sort((a, b) => {
+  results.sort(function(a, b) {
     if (a.knownCookie && !b.knownCookie) return -1;
     if (!a.knownCookie && b.knownCookie) return 1;
     return a.service.localeCompare(b.service);
@@ -233,5 +202,5 @@ async function tryAcceptBanner(page) {
   };
 
   fs.writeFileSync('cookies.json', JSON.stringify(output, null, 2));
-  console.log(`Gemt cookies.json – ${results.length} cookies fra ${Object.keys(grouped).length} tjenester`);
+  console.log('Gemt cookies.json - ' + results.length + ' cookies fra ' + Object.keys(grouped).length + ' tjenester');
 })();
