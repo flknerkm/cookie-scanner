@@ -99,15 +99,22 @@ async function tryAcceptBanner(page) {
     }
   } catch (e) {}
 
-  // Metode 2: Direkte Cookiebot-selektorer på siden
+  // Metode 2: Kendte cookie-banner selektorer
   try {
-    const cookiebotSelectors = [
+    const knownSelectors = [
+      // Silktide (tyden.dk)
+      '.preferences-accept-all',
+      'button[aria-label="Accept all cookies"]',
+      // Cookiebot
       '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
       '#CybotCookiebotDialogBodyButtonAccept',
       'button[onclick*="CookieConsent"]',
-      '#CookiebotWidget button',
+      // Andre kendte bannere
+      '#onetrust-accept-btn-handler',
+      '.cc-accept-all',
+      '[data-cookiefirst-action="accept"]',
     ];
-    for (const sel of cookiebotSelectors) {
+    for (const sel of knownSelectors) {
       const el = await page.$(sel);
       if (el) {
         await el.click();
