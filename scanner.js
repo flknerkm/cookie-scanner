@@ -1,7 +1,5 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-const autoconsent = require('@duckduckgo/autoconsent');
-const extraRules = require('@duckduckgo/autoconsent/rules/rules.json');
 
 const SITE_URL = process.env.SITE_URL || 'https://din-hjemmeside.dk';
 
@@ -23,8 +21,7 @@ const knownCookies = {
   '_gac_':              { service: 'Google Ads', category: 'Marketing', description: 'Forbinder Google Ads-klik med Google Analytics til kampagnesporing', expires: '90 dage' },
   'GCL_AW_P':           { service: 'Google Ads', category: 'Marketing', description: 'Hjælper med at måle effektiviteten af Google Ads-kampagner', expires: '90 dage' },
   'ADS_VISITOR_ID':     { service: 'Google Ads', category: 'Marketing', description: 'Unik identifikator til annoncemålretning på tværs af Google-tjenester', expires: '90 dage' },
-  'IDE':                { service: 'Google Ads (DoubleClick)', category: 'Marketing', description: 'Bruges af Google til at vise annoncer baseret på tidligere besøg på andre websites', expires: '1 år' },
-  'DSID':               { service: 'Google Ads (DoubleClick)', category: 'Marketing', description: 'Identificerer en logget ind bruger til annoncemålretning', expires: '2 uger' },
+  'IDE':                { service: 'Google Ads (DoubleClick)', category: 'Marketing', description: 'Bruges af Google til at vise annoncer baseret på tidligere besøg', expires: '1 år' },
   '__gads':             { service: 'Google Ads', category: 'Marketing', description: 'Registrerer brugerinteraktion med Google-annoncer', expires: '2 år' },
   '__gpi':              { service: 'Google Ads', category: 'Marketing', description: 'Bruges til at spore brugeradfærd til annoncemålretning', expires: '1 år' },
   'CONSENT':            { service: 'Google', category: 'Nødvendig', description: 'Gemmer brugerens samtykkevalg til Google-tjenester', expires: '2 år' },
@@ -84,42 +81,91 @@ function formatExpiry(cookie) {
   return 'Session';
 }
 
+async function tryAcceptBanner(page) {
+  // Metode 1: Cookiebot via iframe
+  try {
+    const frames = page.frames();
+    for (const frame of frames) {
+      const url = frame.url();
+      if (url.includes('cookiebot') || url.includes('consent')) {
+        console.log('Fandt Cookiebot-iframe:', url);
+        const btn = await frame.$('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll, #CybotCookiebotDialogBodyButtonAccept, button[id*="accept"]');
+        if (btn) {
+          await btn.click();
+          console.log('Klikket i Cookiebot-iframe');
+          return true;
+        }
+      }
+    }
+  } catch (e) {}
+
+  // Metode 2: Direkte Cookiebot-selektorer på siden
+  try {
+    const cookiebotSelectors = [
+      '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+      '#CybotCookiebotDialogBodyButtonAccept',
+      'button[onclick*="CookieConsent"]',
+      '#CookiebotWidget button',
+    ];
+    for (const sel of cookiebotSelectors) {
+      const el = await page.$(sel);
+      if (el) {
+        await el.click();
+        console.log(`Klikket på: ${sel}`);
+        return true;
+      }
+    }
+  } catch (e) {}
+
+  // Metode 3: Generisk tekst-baseret søgning
+  try {
+    const acceptTexts = ['accept', 'accepter', 'tillad alle', 'allow all', 'godkend', 'agree', 'got it', 'ok'];
+    const buttons = await page.$$('button, [role="button"]');
+    for (const btn of buttons) {
+      const text = await page.evaluate(el => el.innerText?.toLowerCase().trim(), btn);
+      if (text && acceptTexts.some(t => text === t || text.startsWith(t))) {
+        await btn.click();
+        console.log(`Klikket på knap med tekst: "${text}"`);
+        return true;
+      }
+    }
+  } catch (e) {}
+
+  return false;
+}
+
 (async () => {
   console.log(`Scanning: ${SITE_URL}`);
 
   const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-features=IsolateOrigins,site-per-process']
   });
 
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-  // Brug autoconsent til automatisk at håndtere Cookiebot og andre CMP-bannere
-  const rules = [
-    ...autoconsent.builtinRules,
-    ...extraRules.consentomatic.map(r => new autoconsent.ConsentOMaticCMP(r.name, r)),
-  ];
-
-  const consentManager = new autoconsent.PuppeteerAutoconsent(page, null, rules);
-
-  page.on('framenavigated', async () => {
-    try {
-      await consentManager.checkPopups();
-    } catch {}
-  });
+  // Aktiver tredjepartscookies
+  const client = await page.createCDPSession();
+  await client.send('Network.enable');
 
   await page.goto(SITE_URL, { waitUntil: 'networkidle2', timeout: 60000 });
 
-  // Vent på at autoconsent finder og accepterer banneret
-  console.log('Venter på autoconsent...');
-  try {
-    await consentManager.doOptIn();
-    console.log('Cookie-banner accepteret via autoconsent');
-  } catch (e) {
-    console.log('Autoconsent kunne ikke acceptere banner:', e.message);
+  // Vent på at banner loader
+  console.log('Venter på cookie-banner...');
+  await new Promise(r => setTimeout(r, 5000));
+
+  // Forsøg at acceptere banneret
+  const accepted = await tryAcceptBanner(page);
+  if (accepted) {
+    console.log('Banner accepteret – venter på at cookies sættes...');
+    await new Promise(r => setTimeout(r, 8000));
+  } else {
+    console.log('Intet banner fundet – fortsætter...');
+    await new Promise(r => setTimeout(r, 5000));
   }
 
-  await new Promise(r => setTimeout(r, 10000));
+  // Scroll for at trigge lazy scripts
   await page.evaluate(() => window.scrollBy(0, 600));
   await new Promise(r => setTimeout(r, 4000));
 
