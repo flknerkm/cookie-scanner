@@ -32,3 +32,4 @@ jobs:
         with:
           commit_message: "Automatisk cookie-scanning - ${{ github.run_id }}"
           file_pattern: cookies.json
+          push_options: '--force'
