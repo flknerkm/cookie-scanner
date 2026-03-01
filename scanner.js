@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 
 const SITE_URL = process.env.SITE_URL || 'https://din-hjemmeside.dk';
