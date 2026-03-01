@@ -1,5 +1,5 @@
 {
-  "lastScanned": "2026-02-19T11:06:50.477Z",
+  "lastScanned": "2026-03-01T15:31:40.336Z",
   "url": "https://tyden.dk/",
   "totalCookies": 5,
   "cookies": {
@@ -16,19 +16,19 @@
     ],
     "Google Analytics": [
       {
-        "name": "_ga_9650L6BGDF",
+        "name": "_ga",
         "service": "Google Analytics",
         "category": "Statistik",
-        "description": "Gemmer og opdaterer sessionsdata for den specifikke GA4-ejendom",
+        "description": "Identificerer unikke brugere på tværs af sessioner via et tilfældigt genereret klient-ID",
         "expires": "2 år",
         "domain": ".tyden.dk",
         "knownCookie": true
       },
       {
-        "name": "_ga",
+        "name": "_ga_9650L6BGDF",
         "service": "Google Analytics",
         "category": "Statistik",
-        "description": "Identificerer unikke brugere på tværs af sessioner via et tilfældigt genereret klient-ID",
+        "description": "Gemmer og opdaterer sessionsdata for den specifikke GA4-ejendom",
         "expires": "2 år",
         "domain": ".tyden.dk",
         "knownCookie": true
