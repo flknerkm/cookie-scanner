@@ -68,6 +68,7 @@ function formatExpiry(cookie) {
 
   const browser = await puppeteer.launch({
     headless: 'new',
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
@@ -76,11 +77,9 @@ function formatExpiry(cookie) {
 
   await page.goto(SITE_URL, { waitUntil: 'networkidle2', timeout: 60000 });
 
-  // Vent på at banner loader
   console.log('Venter på cookie-banner...');
   await new Promise(r => setTimeout(r, 5000));
 
-  // Debug: log alle knapper scanneren kan se
   const allButtons = await page.evaluate(() => {
     return Array.from(document.querySelectorAll('button, [role="button"]')).map(function(el) {
       return {
@@ -99,13 +98,11 @@ function formatExpiry(cookie) {
   });
   console.log('--- Slut ---');
 
-  // Tjek om Silktide accept-knappen findes
   const silktideExists = await page.evaluate(function() {
     return document.querySelector('.preferences-accept-all') !== null;
   });
   console.log('Silktide .preferences-accept-all fundet: ' + silktideExists);
 
-  // Forsøg at klikke på kendte selektorer
   const selectors = [
     '.accept-all',
     '.preferences-accept-all',
@@ -131,7 +128,6 @@ function formatExpiry(cookie) {
     }
   }
 
-  // Generisk tekst-fallback
   if (!accepted) {
     console.log('Ingen kendte selektorer fundet - prøver tekst-søgning...');
     try {
